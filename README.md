@@ -4,7 +4,7 @@
 
 Este projeto consiste no desenvolvimento de um **chatbot assistente de agendamentos**, capaz de interagir com o usuário via WhatsApp para registrar compromissos e enviar lembretes automáticos.
 
-A solução utiliza uma arquitetura híbrida, combinando **C++ (lógica)**, **Python (integração/API)** e **banco de dados SQL**.
+A solução utiliza uma arquitetura híbrida, combinando **C++ (monitor de alertas)**, **Python (conversa e integração)** e **banco de dados MySQL**.
 
 ---
 
@@ -12,50 +12,44 @@ A solução utiliza uma arquitetura híbrida, combinando **C++ (lógica)**, **Py
 
 Criar um sistema capaz de:
 
-* 📅 Agendar compromissos via conversa natural
+* 📅 Agendar compromissos via WhatsApp
 * 🔔 Enviar lembretes automáticos no horário correto
 * 🤖 Simular um assistente pessoal inteligente
 
 ---
 
 ## 🏗️ Arquitetura do Sistema
-
-```
 Usuário (WhatsApp)
-        ↓
-Python (API / Webhook)
-        ↓
-C++ (Motor de lógica - Máquina de Estados)
-        ↓
-Banco de Dados (MySQL)
-        ↓
-Scheduler (Verificação de horários)
-```
+↓
+Twilio (Webhook)
+↓
+Python/Flask (Conversa + Máquina de Estados)
+↓
+MySQL (compromissos + sessoes)
+↑
+C++ (Monitor de alertas - roda separado)
+verifica horários e dispara lembretes
 
 ---
 
 ## 🗄️ Estrutura do Banco de Dados
 
-O sistema utiliza duas tabelas principais no MySQL:
-
 ### 📌 Tabela: compromissos
-
-Responsável por armazenar os lembretes dos usuários.
+Armazena os lembretes finalizados.
 
 ```sql
 CREATE TABLE compromissos (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    telefone VARCHAR(20),
-    nome VARCHAR(100),
-    data DATE,
-    hora TIME,
+    id_compromisso INT AUTO_INCREMENT PRIMARY KEY,
+    telefone VARCHAR(100) NOT NULL,
+    nome VARCHAR(45) NOT NULL,
+    data DATE NOT NULL,
+    hora TIME NOT NULL,
     concluido TINYINT DEFAULT 0
 );
 ```
 
 ### 📌 Tabela: sessoes
-
-Responsável por controlar o estado da conversa de cada usuário.
+Controla o estado da conversa de cada usuário.
 
 ```sql
 CREATE TABLE sessoes (
@@ -67,32 +61,46 @@ CREATE TABLE sessoes (
 );
 ```
 
-💡 A tabela `sessoes` substitui o uso de estruturas em memória (como `map` no C++), permitindo que o sistema mantenha o estado da conversa de forma persistente e escalável.
+💡 Quando o Python recebe uma mensagem:
+* Consulta `sessoes` pelo telefone
+* Identifica em qual etapa o usuário está
+* Continua o fluxo corretamente
+* Quando completo, salva em `compromissos` e reseta `sessoes`
 
-Quando o Python recebe uma mensagem:
+O C++ lê `compromissos` periodicamente e verifica se chegou a hora de alertar.
 
-* consulta a tabela `sessoes`
-* identifica em qual etapa o usuário está
-* continua o fluxo da conversa corretamente
+---
+
+## 🔧 Divisão de Responsabilidades
+
+| Componente | Responsabilidade |
+|------------|-----------------|
+| Python/Flask | Recebe mensagens, gerencia estados, salva no banco |
+| MySQL | Persiste compromissos e sessões |
+| C++ | Monitor de horários e disparo de alertas |
+| Twilio | Integração com WhatsApp |
 
 ---
 
 ## 🎓 Nota Acadêmica
 
-Embora existam tecnologias mais adequadas para a construção de chatbots, este projeto utiliza **C++ de forma intencional**, com foco em aprendizado profundo de lógica, controle de estado e manipulação de dados.
+Este projeto utiliza **C++ de forma intencional**, com foco em aprendizado de estruturas de dados, controle de estado, manipulação de arquivos e uso da biblioteca `<ctime>` para monitoramento de horários.
 
 ---
 
 ## 🚀 Status do Projeto
 
-🔧 Em desenvolvimento
-✔️ Cadastro de compromissos
-✔️ Validação de data e hora
-✔️ Estrutura inicial de lembretes
+🔧 Em desenvolvimento  
+✔️ Backend C++ (máquina de estados, validações, monitor)  
+✔️ Banco de dados MySQL  
+✔️ Models SQLAlchemy  
+✔️ Webhook Flask/Twilio  
+⏳ Integração ngrok  
+⏳ Testes end-to-end  
 
 ---
 
 ## 👨‍💻 Autor
 
 Desenvolvido por:
- Jefferson Luiz Vieira dos Santos Junior 🚀
+Jefferson Luiz Vieira dos Santos Junior 🚀
