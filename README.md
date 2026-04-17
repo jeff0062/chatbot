@@ -104,3 +104,4 @@ Este projeto utiliza **C++ de forma intencional**, com foco em aprendizado de es
 
 Desenvolvido por:
 Jefferson Luiz Vieira dos Santos Junior 🚀
+2026
