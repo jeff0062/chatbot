@@ -13,13 +13,23 @@ db.init_app(app)
 
 @app.route("/webhook", methods=["POST"])
 def webhook():
-    telefone = request.form.get("From")
-    mensagem = request.form.get("Body").strip()
+    telefone = request.form.get("From", "").strip()
+    telefone = telefone.replace("whatsapp:", "").replace("+", "")
+
+    if not telefone:
+        return "Erro: From não enviado", 400
+
+    mensagem = request.form.get("Body", "").strip()
     
     resp = MessagingResponse()
+ 
+    print("FORM:", request.form)
+    print("From:", request.form.get("From"))
+    print("Body:", request.form.get("Body"))
     
-    sessao = Sessao.query.get(telefone)
-    if not sessao:
+    sessao = db.session.get(Sessao, telefone)
+
+    if sessao is None:
         sessao = Sessao(telefone=telefone, estado=1)
         db.session.add(sessao)
         db.session.commit()
@@ -31,6 +41,7 @@ def webhook():
         sessao.estado = 2
         db.session.commit()
         resp.message("Compromisso salvo! Informe a data 'DD/MM/AAAA':")
+        return str(resp)
     
     elif sessao.estado == 2:
         # valida data
@@ -40,9 +51,10 @@ def webhook():
             sessao.estado = 3
             db.session.commit()
             resp.message("Data salva! Informe a hora 'HH:MM':")
+            return str(resp)
         except:
             resp.message("Data invalida! Use o formato DD/MM/AAAA:")
-    
+            return str(resp)
     elif sessao.estado == 3:
         # valida hora
         try:
@@ -65,8 +77,10 @@ def webhook():
             db.session.commit()
             
             resp.message("Compromisso agendado com sucesso!")
+            return str(resp)
         except:
             resp.message("Hora invalida! Use o formato HH:MM:")
+            return str(resp)
     
     return str(resp)
 
