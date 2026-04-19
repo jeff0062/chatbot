@@ -3,7 +3,8 @@ from flask_sqlalchemy import SQLAlchemy
 from twilio.twiml.messaging_response import MessagingResponse
 from SQL_alchemy import db, Sessao, Compromisso
 from datetime import datetime
-
+from schleuder import iniciar_scheduler
+iniciar_scheduler()
 app = Flask(__name__)
 
 app.config['SQLALCHEMY_DATABASE_URI']='mysql+pymysql://root:@127.0.0.1:3306/lembra_eu_brasil'
@@ -30,17 +31,23 @@ def webhook():
     sessao = db.session.get(Sessao, telefone)
 
     if sessao is None:
-        sessao = Sessao(telefone=telefone, estado=1)
+        sessao = Sessao(telefone=telefone, estado=0)
         db.session.add(sessao)
         db.session.commit()
-        resp.message("Ola! Vou lhe ajudar a lembrar seus compromissos.\nQual o nome do compromisso?")
+        resp.message("👋 Olá! Sou seu assistente de lembretes.\nVamos agendar seu compromisso ok?\n\n")
         return str(resp)
     
-    if sessao.estado == 1:
+    if sessao.estado == 0:
+        sessao.estado = 1
+        db.session.commit()
+        resp.message("📝 Qual o nome do compromisso?")
+        return str(resp)
+
+    elif sessao.estado == 1:
         sessao.nome_temp = mensagem
         sessao.estado = 2
         db.session.commit()
-        resp.message("Compromisso salvo! Informe a data 'DD/MM/AAAA':")
+        resp.message("✅ Compromisso salvo!\n\n📅 Informe a data no formato *DD/MM/AAAA*:")
         return str(resp)
     
     elif sessao.estado == 2:
@@ -50,38 +57,48 @@ def webhook():
             sessao.data_temp = mensagem
             sessao.estado = 3
             db.session.commit()
-            resp.message("Data salva! Informe a hora 'HH:MM':")
+            resp.message("✅ Data salva!\n\n⏰ Informe a hora no formato *HH:MM*:")
             return str(resp)
         except:
-            resp.message("Data invalida! Use o formato DD/MM/AAAA:")
+            resp.message("❌ Data inválida! Use o formato *DD/MM/AAAA*\nEx: 25/04/2026")
             return str(resp)
+    
     elif sessao.estado == 3:
-        # valida hora
         try:
             hora = datetime.strptime(mensagem, "%H:%M").time()
             data = datetime.strptime(sessao.data_temp, "%d/%m/%Y").date()
-            
-            # salva compromisso
+        
             compromisso = Compromisso(
-                telefone=telefone,
-                nome=sessao.nome_temp,
-                data=data,
-                hora=hora,
-                concluido=0
+            telefone=telefone,
+            nome=sessao.nome_temp,
+            data=data,
+            hora=hora,
+            concluido=0
             )
             db.session.add(compromisso)
-            
-            sessao.estado = 1
+        
+            sessao.estado = 4  # novo estado — aguardando decisão
             sessao.nome_temp = None
             sessao.data_temp = None
             db.session.commit()
-            
-            resp.message("Compromisso agendado com sucesso!")
+        
+            resp.message("✅ Compromisso agendado com sucesso!\n\nDeseja adicionar outro?\n1️⃣ - Sim\n2️⃣ - Encerrar")
             return str(resp)
         except:
-            resp.message("Hora invalida! Use o formato HH:MM:")
+            resp.message("❌ Hora inválida! Use o formato *HH:MM*\nEx: 14:30")
             return str(resp)
-    
+
+    elif sessao.estado == 4:
+        if mensagem == "1":
+            sessao.estado = 1
+            db.session.commit()
+            resp.message("📝 Qual o nome do próximo compromisso?")
+        else:
+            db.session.delete(sessao)
+            db.session.commit()
+            resp.message("Agradecemos o contato! Até logo! 👋")
+            return str(resp)
+        
     return str(resp)
 
 if __name__ == "__main__":
