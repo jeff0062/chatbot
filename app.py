@@ -1,10 +1,11 @@
+import os
 from flask import Flask, request
 from flask_sqlalchemy import SQLAlchemy
 from twilio.twiml.messaging_response import MessagingResponse
 from SQL_alchemy import db, Sessao, Compromisso
 from datetime import datetime
 from scheduler import iniciar_scheduler
-iniciar_scheduler()
+
 app = Flask(__name__)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("DATABASE_URL")
@@ -102,4 +103,6 @@ def webhook():
     return str(resp)
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+    iniciar_scheduler() 
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
