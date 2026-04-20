@@ -3,11 +3,12 @@ from flask_sqlalchemy import SQLAlchemy
 from twilio.twiml.messaging_response import MessagingResponse
 from SQL_alchemy import db, Sessao, Compromisso
 from datetime import datetime
-from schleuder import iniciar_scheduler
+from scheduler import iniciar_scheduler
 iniciar_scheduler()
 app = Flask(__name__)
+import os
 
-app.config['SQLALCHEMY_DATABASE_URI']='mysql+pymysql://root:@127.0.0.1:3306/lembra_eu_brasil'
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("DATABASE_URL")
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db.init_app(app)
@@ -102,4 +103,4 @@ def webhook():
     return str(resp)
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
