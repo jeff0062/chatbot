@@ -13,6 +13,12 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db.init_app(app)
 
+print(Sessao.__table__)
+print(Compromisso.__table__)
+
+with app.app_context():
+    db.create_all()
+
 @app.route("/webhook", methods=["POST"])
 def webhook():
     telefone = request.form.get("From", "").strip()
