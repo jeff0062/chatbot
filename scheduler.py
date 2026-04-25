@@ -37,3 +37,4 @@ def iniciar_scheduler():
     scheduler = BackgroundScheduler()
     scheduler.add_job(verificar_compromissos, 'interval', minutes=5)
     scheduler.start()
+    
