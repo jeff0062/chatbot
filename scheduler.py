@@ -10,6 +10,8 @@ AUTH_TOKEN = os.getenv("AUTH_TOKEN")
 TWILIO_NUMBER = "whatsapp:+14155238886"
 
 def verificar_compromissos():
+    print(f"SID: {ACCOUNT_SID}")
+    print(f"TOKEN: {AUTH_TOKEN}")
     from app import app
     with app.app_context():
         print("🔍 Verificando compromissos...")  # DEBUG
