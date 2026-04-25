@@ -5,8 +5,6 @@ from SQL_alchemy import db, Compromisso
 import os
 from dotenv import load_dotenv
 
-load_dotenv("credenciais.env")
-
 ACCOUNT_SID = os.getenv("ACCOUNT_SID")
 AUTH_TOKEN = os.getenv("AUTH_TOKEN")
 TWILIO_NUMBER = "whatsapp:+14155238886"
