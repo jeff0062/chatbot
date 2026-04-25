@@ -5,6 +5,9 @@ from twilio.twiml.messaging_response import MessagingResponse
 from SQL_alchemy import db, Sessao, Compromisso
 from datetime import datetime
 from scheduler import iniciar_scheduler
+import pymysql
+
+pymysql.install_as_MySQLdb()
 
 app = Flask(__name__)
 
