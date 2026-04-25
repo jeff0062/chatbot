@@ -1,6 +1,6 @@
 from apscheduler.schedulers.background import BackgroundScheduler
 from twilio.rest import Client
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from SQL_alchemy import db, Compromisso
 import os
 from dotenv import load_dotenv
@@ -13,7 +13,7 @@ TWILIO_NUMBER = "whatsapp:+14155238886"  # numero sandbox do Twilio
 def verificar_compromissos():
     from app import app
     with app.app_context():
-        agora = datetime.now()
+        agora = datetime.now(timezone.utc) - timedelta(hours=3)
         
         compromissos = Compromisso.query.filter_by(concluido=0).all()
         
